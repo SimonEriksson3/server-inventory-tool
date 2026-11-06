@@ -26,7 +26,7 @@ def run():
             case 6:
                 pass
             case 7:
-                pass
+                export_report()
             case 8:
                 break
 
@@ -44,23 +44,13 @@ def print_menu():
 def list_all_servers(servers):
     print("--- Alla registrerade servrar ---")
     for server in servers:
-        print(f"Namn:                   {server["namn"]}")
-        print(f"Adress:                 {server["adress"]}")
-        print(f"Miljö:                  {server["miljo"]}")
-        print(f"Roll:                   {server["roll"]}")
-        print(f"Status:                 {server["status"]}")
-        print(f"Senast kontrollerad:    {server["senast_kontrollerad"]} \n")
+        print_server_format(server)
 
 def list_by_environment(servers):
     environment = get_user_input("Ange miljö: ")
     for server in servers:
         if server["miljo"] == environment:
-            print(f"Namn:                   {server["namn"]}")
-            print(f"Adress:                 {server["adress"]}")
-            print(f"Miljö:                  {server["miljo"]}")
-            print(f"Roll:                   {server["roll"]}")
-            print(f"Status:                 {server["status"]}")
-            print(f"Senast kontrollerad:    {server["senast_kontrollerad"]} \n")
+            print_server_format(server)
 
 def add_server():
     print("--- Lägg till server ---")
@@ -99,6 +89,21 @@ def remove_server():
         if server_target["miljo"] == "prod":
             if get_confirmation("Denna server är i produktion! \nÄr du säker på att du vill ta bort den (ja/nej)?"):
                 storage.remove_server(server_target)
+
+def export_report():
+    file_name = storage.export_report()
+    if file_name == "":
+        print("Kunde inte skriva till fil.")
+    else:
+        print(f"Rapport exporterad till {file_name}")
+
+def print_server_format(server):
+    print(f"{"Namn:":<25} {server["namn"]}")
+    print(f"{"Adress:":<25} {server["adress"]}")
+    print(f"{"Miljö:":<25} {server["miljo"]}")
+    print(f"{"Roll:":<25} {server["roll"]}")
+    print(f"{"Status:":<25} {server["status"]}")
+    print(f"{"Senast kontrollerad:":<25} {server["senast_kontrollerad"]} \n")
 
 # Input validering, tvingar fram korrekt inmatning i en loop
 def get_user_choice(min, max, prompt):

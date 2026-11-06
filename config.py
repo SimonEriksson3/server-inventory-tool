@@ -10,3 +10,12 @@ def get_config():
     else:
         print("Fel: Inga konfigurationer kunde laddas. Filen hittas inte.")
         return None
+
+def get_servers_filepath():
+    return configuration["servers_filepath"]
+
+# Load configurations
+configuration = get_config()
+# Fallback
+if not configuration:
+    configuration = {"servers_filepath": "servers.json"}
