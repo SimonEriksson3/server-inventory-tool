@@ -1,4 +1,5 @@
 # Text-baserad meny.
+import checker
 import storage
 
 
@@ -12,6 +13,11 @@ def run():
         print_menu()
         choice = get_user_choice(1, 8, "Gör ett val: ")
 
+        if not storage.servers:
+            if choice != 3 and choice != 8:
+                print("Just nu finns inga servrar! Börja med att lägga till en server.")
+                continue
+
         match(choice):
             case 1:
                 list_all_servers(servers)
@@ -20,13 +26,13 @@ def run():
             case 3:
                 add_server()
             case 4:
-                remove_server()
+                remove_server(servers)
             case 5:
-                pass
+                check_server(servers)
             case 6:
                 pass
             case 7:
-                export_report()
+                export_report(servers)
             case 8:
                 break
 
@@ -71,28 +77,29 @@ def add_server():
 
     storage.add_server(name, address, environment, role)
 
-def remove_server():
-    if storage.servers:  # Om listan innehåller element
-        for i in range(len(storage.servers)):
-            server = storage.servers[i]
-            print(f"{i + 1}:")
-            print(f"Namn:                   {server["namn"]}")
-            print(f"Adress:                 {server["adress"]}")
-            print(f"Miljö:                  {server["miljo"]}")
-            print(f"Roll:                   {server["roll"]}")
-            print(f"Status:                 {server["status"]}")
-            print(f"Senast kontrollerad:    {server["senast_kontrollerad"]} \n")
-        servers_size = len(storage.servers)
-        choice = get_user_choice(1, servers_size, "Ange nummer för den server du vill ta bort: ")
-        server_target = storage.servers[choice - 1]
-        # Kontroll för radering av servrar i produktion
-        if server_target["miljo"] == "prod":
-            if get_confirmation("Denna server är i produktion! \nÄr du säker på att du vill ta bort den (ja/nej)?"):
-                storage.remove_server(server_target)
+def remove_server(servers):
+    target_servers = select_servers(servers, "Ange vilka servrar du vill ta bort (separera med kommatecken): ")
 
-def export_report():
-    file_name = storage.export_report()
-    if file_name == "":
+    for server in target_servers:
+        print(f"{server["namn"]} : {server["adress"]}")
+    if get_confirmation("Är du säker på att du vill ta bort dessa servrar (ja/nej)?"):
+        for target in target_servers:
+            # Extra kontroll för radering av servrar i produktionsmiljön
+            if target["miljo"] == "prod":
+                if get_confirmation(f"{target["namn"]} är i produktion! \nÄr du säker på att du vill ta bort den (ja/nej)?"):
+                    storage.remove_server(target)
+            else:
+                storage.remove_server(target)
+
+def check_server(servers):
+    target_servers = select_servers(servers, "Ange vilka servrar du vill kontrollera: ")
+
+    for target in target_servers:
+        checker.ping_servers(target)
+
+def export_report(servers):
+    file_name = storage.export_report(servers)
+    if file_name is None:
         print("Kunde inte skriva till fil.")
     else:
         print(f"Rapport exporterad till {file_name}")
@@ -105,6 +112,31 @@ def print_server_format(server):
     print(f"{"Status:":<25} {server["status"]}")
     print(f"{"Senast kontrollerad:":<25} {server["senast_kontrollerad"]} \n")
 
+def select_servers(servers, prompt):
+    print("Vill du utföra åtgärden på samtliga servrar eller välja ut en/flera specifika servrar?\n")
+    print("1. Alla servrar")
+    print("2. Välj specifik(a) server/servrar\n")
+
+    choice = get_user_choice(1, 2, "Gör ett val: ")
+
+    target_servers = []
+
+    match (choice):
+        case 1:
+            target_servers = servers.copy()
+        case 2:
+            # Om listan innehåller element
+            for i in range(len(servers)):
+                server = servers[i]
+                print(f"{i + 1}:")
+                print_server_format(server)
+
+            servers_size = len(servers)
+            choices = get_multiple_choices(1, servers_size, prompt)
+            for number in choices:
+                target_servers.append(servers[number - 1])
+    return target_servers
+
 # Input validering, tvingar fram korrekt inmatning i en loop
 def get_user_choice(min, max, prompt):
     while True:
@@ -116,10 +148,10 @@ def get_user_choice(min, max, prompt):
             if choice >= min and choice <= max:
                 return choice
             else:
-                print(f"Fel: Ogiltigt val. Välj ett av menyvalen ({min}-{max}).")
+                print(f"Fel: {user_input} är ett ogiltigt val. Välj ett av menyvalen ({min}-{max}).")
         except ValueError:
-            print(f"Fel: Ange en siffra mellan {min} och {max}.")
-            return None
+            print(f"Fel: Kunde inte tolka '{user_input}' som siffra. Ange en siffra mellan {min} och {max}.")
+            continue
 
 # Input validering för strängar
 def get_user_input(prompt):
@@ -131,6 +163,35 @@ def get_user_input(prompt):
             continue
         else:
             return user_input
+
+#Ber användaren om ett eller flera val (siffror)
+def get_multiple_choices(min, max, prompt):
+    while True:
+        user_input = input(prompt).strip()
+
+        if user_input == "":
+            print("Fel: Ange antingen en enskild siffra eller flera siffror separerade med kommatecken (t.ex '1', eller '1, 2, 3, 4')")
+            continue
+
+        # Dela upp strängen i delar
+        parts = user_input.split(',')
+        numbers = [] # Listan med siffror vi ska returnera
+        for part in parts:
+            part = part.strip()
+            try:
+                server_number = int(part)
+                if server_number < min or server_number > max:
+                    print(f"Fel: {server_number} är inte ett giltigt värde och har hoppats över.")
+                else:
+                    if server_number not in numbers:
+                        numbers.append(server_number)
+            except ValueError:
+                print(f"Fel: {part} ej tillåtet. Endast siffror tillåtna.")
+                break
+        else:
+            if not numbers:
+                continue
+            return numbers
 
 # Input validering för ja/nej-frågor
 def get_confirmation(prompt):

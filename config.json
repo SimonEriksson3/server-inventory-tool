@@ -1,3 +1,4 @@
  {
-    "servers_filepath" : "servers.json"
+    "servers_sökväg" : "servers.json",
+    "rapporter_sökväg" : "rapporter"
   }

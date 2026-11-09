@@ -2,7 +2,6 @@
 import csv
 from datetime import datetime
 import json
-from pathlib import Path
 
 import config
 
@@ -10,7 +9,7 @@ import config
 def load_servers(file_path):
     global servers # För att vi ska kunna nå den globala variabeln servers
     try:
-        if Path(file_path).exists():
+        if file_path.exists():
             with open(file_path, "r", encoding="utf-8") as file:
                 return json.load(file)
         else:
@@ -45,11 +44,14 @@ def add_server(name, address, environment, role):
 def remove_server(server):
     servers.remove(server)
 
-def export_report():
-    directory = Path("rapporter")
+def export_report(servers_to_export):
+    # Skapa mappen för rapporter om den inte finns.
+    # Namnet på mappen anges i config.json
+    directory = config.get_reports_filepath()
     directory.mkdir(exist_ok=True)
     time = datetime.now()
     file_path = directory / f"{time.strftime('report_%Y-%m-%d_%H-%M')}.csv"
+
     try:
         with open(file_path, "w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(
@@ -57,7 +59,7 @@ def export_report():
                 fieldnames=["namn", "adress", "miljo", "roll", "status", "senast_kontrollerad"]
             )
             writer.writeheader()
-            writer.writerows(servers)
+            writer.writerows(servers_to_export)
         return file_path
     except PermissionError:
         print(f"PermissionError: Kunde inte skriva till filen {file_path}. ")
