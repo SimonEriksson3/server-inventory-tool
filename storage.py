@@ -5,8 +5,8 @@ import json
 
 import config
 
-
-def load_servers(file_path):
+def load_servers():
+    file_path = config.get_servers_filepath()
     global servers # För att vi ska kunna nå den globala variabeln servers
     try:
         if file_path.exists():
@@ -14,20 +14,44 @@ def load_servers(file_path):
                 return json.load(file)
         else:
             print("Fel: Kunde inte ladda servrar. Filen hittades inte.")
+            return [] # Returnera ny tom lista
     except PermissionError as e:
         print(f"Fel: Kunde inte läsa filen {file_path}. {e}")
     except json.JSONDecodeError:
         print(f"Fel: Kunde inte läsa filen {file_path}. JSON-filen kan vara trasig")
 
-servers = load_servers(config.get_servers_filepath())
+def save_servers():
+    file_path = config.get_servers_filepath()
+    try:
+        if file_path.exists():
+            with open(file_path, "w", encoding="utf-8") as file:
+                json.dump(
+                    servers,
+                    file,
+                    indent=2,
+                    ensure_ascii=False
+                )
+        else:
+            print("Fel: Kunde inte skriva lagra nya servervärden. Filen hittades inte.")
+    except PermissionError as e:
+        print(f"Fel: Kunde inte läsa filen {file_path}. {e}")
+
+servers = load_servers()
 
 def get_servers():
     return servers
 
+def update_status(server, status):
+    time = datetime.now()
+    server["status"] = status
+    server["senast_kontrollerad"] = time.strftime("%Y-%m-%d %H:%M")
+
+
 def server_exists(name):
-    for server in servers:
-        if server["namn"].lower() == name.lower():
-            return True
+    if servers:
+        for server in servers:
+            if server["namn"].lower() == name.lower():
+                return True
     return False
 
 def add_server(name, address, environment, role):
@@ -44,7 +68,7 @@ def add_server(name, address, environment, role):
 def remove_server(server):
     servers.remove(server)
 
-def export_report(servers_to_export):
+def export_report():
     # Skapa mappen för rapporter om den inte finns.
     # Namnet på mappen anges i config.json
     directory = config.get_reports_filepath()
@@ -59,7 +83,7 @@ def export_report(servers_to_export):
                 fieldnames=["namn", "adress", "miljo", "roll", "status", "senast_kontrollerad"]
             )
             writer.writeheader()
-            writer.writerows(servers_to_export)
+            writer.writerows(servers)
         return file_path
     except PermissionError:
         print(f"PermissionError: Kunde inte skriva till filen {file_path}. ")

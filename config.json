@@ -1,4 +1,4 @@
  {
-    "servers_sökväg" : "servers.json",
+    "servers_sökväg" : "servrar.json",
     "rapporter_sökväg" : "rapporter"
-  }
+ }

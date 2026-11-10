@@ -2,6 +2,7 @@
 import checker
 import storage
 
+servers = storage.get_servers()
 
 # Starts the menu loop
 def run():
@@ -11,29 +12,27 @@ def run():
         # färsk data.
         servers = storage.get_servers()
         print_menu()
-        choice = get_user_choice(1, 8, "Gör ett val: ")
+        choice = get_user_choice(1, 7, "Gör ett val: ")
 
         if not storage.servers:
-            if choice != 3 and choice != 8:
+            if choice != 3 and choice != 7:
                 print("Just nu finns inga servrar! Börja med att lägga till en server.")
                 continue
 
         match(choice):
             case 1:
-                list_all_servers(servers)
+                list_all_servers()
             case 2:
-                list_by_environment(servers)
+                list_by_environment()
             case 3:
                 add_server()
             case 4:
-                remove_server(servers)
+                remove_server()
             case 5:
-                check_server(servers)
+                check_server()
             case 6:
-                pass
+                export_report()
             case 7:
-                export_report(servers)
-            case 8:
                 break
 
 def print_menu():
@@ -43,16 +42,15 @@ def print_menu():
     print("3. Lägg till server")
     print("4. Ta bort server")
     print("5. Kontrollera server")
-    print("6. Kontrollera alla servrar")
-    print("7. Exportera rapport")
-    print("8. Avsluta")
+    print("6. Exportera rapport")
+    print("7. Avsluta")
 
-def list_all_servers(servers):
+def list_all_servers():
     print("--- Alla registrerade servrar ---")
     for server in servers:
         print_server_format(server)
 
-def list_by_environment(servers):
+def list_by_environment():
     environment = get_user_input("Ange miljö: ")
     for server in servers:
         if server["miljo"] == environment:
@@ -63,9 +61,9 @@ def add_server():
     name = get_user_input("Ange namn: ")
     address = get_user_input("Ange adress: ")
 
-    environments = ["prod", "test", "dev"]
+    valid_environments = ["prod", "test", "dev"]
     environment = get_user_input("Ange miljö (dev/test/prod): ")
-    while environment.lower() not in environments:
+    while environment.lower() not in valid_environments:
         print("Fel: Giltiga värden är dev, test eller prod. Försök igen.")
         environment = get_user_input("Ange miljö (dev/test/prod): ")
 
@@ -77,7 +75,7 @@ def add_server():
 
     storage.add_server(name, address, environment, role)
 
-def remove_server(servers):
+def remove_server():
     target_servers = select_servers(servers, "Ange vilka servrar du vill ta bort (separera med kommatecken): ")
 
     for server in target_servers:
@@ -91,14 +89,15 @@ def remove_server(servers):
             else:
                 storage.remove_server(target)
 
-def check_server(servers):
+def check_server():
     target_servers = select_servers(servers, "Ange vilka servrar du vill kontrollera: ")
-
+    # Kontrollerar valda servrar
     for target in target_servers:
-        checker.ping_servers(target)
+        checker.ping_server(target)
+    storage.save_servers()
 
-def export_report(servers):
-    file_name = storage.export_report(servers)
+def export_report():
+    file_name = storage.export_report()
     if file_name is None:
         print("Kunde inte skriva till fil.")
     else:
@@ -159,10 +158,14 @@ def get_user_input(prompt):
         user_input = input(prompt).strip()
 
         if user_input == "":
-            print("Fel: Ange giltigt värde")
+            print("Fel: Ange ett giltigt värde")
             continue
-        else:
-            return user_input
+        parts = user_input.split()
+        if len(parts) > 1:
+            print("Fel: Värdet får INTE innehålla mellanslag.")
+            continue
+
+        return user_input
 
 #Ber användaren om ett eller flera val (siffror)
 def get_multiple_choices(min, max, prompt):
@@ -181,7 +184,7 @@ def get_multiple_choices(min, max, prompt):
             try:
                 server_number = int(part)
                 if server_number < min or server_number > max:
-                    print(f"Fel: {server_number} är inte ett giltigt värde och har hoppats över.")
+                    print(f"Fel: {server_number} är inte ett giltigt värde och har hoppats över.") #
                 else:
                     if server_number not in numbers:
                         numbers.append(server_number)
