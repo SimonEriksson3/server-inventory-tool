@@ -2,15 +2,9 @@
 import checker
 import storage
 
-servers = storage.get_servers()
-
 # Starts the menu loop
 def run():
     while True:
-        # Uppdatera listan för varje iteration.
-        # I praktiken vill man kanske att listan ska uppdateras inför varje operation för att få
-        # färsk data.
-        servers = storage.get_servers()
         print_menu()
         choice = get_user_choice(1, 7, "Gör ett val: ")
 
@@ -19,7 +13,7 @@ def run():
                 print("Just nu finns inga servrar! Börja med att lägga till en server.")
                 continue
 
-        match(choice):
+        match choice:
             case 1:
                 list_all_servers()
             case 2:
@@ -33,6 +27,7 @@ def run():
             case 6:
                 export_report()
             case 7:
+                print("Hej då!")
                 break
 
 def print_menu():
@@ -47,12 +42,12 @@ def print_menu():
 
 def list_all_servers():
     print("--- Alla registrerade servrar ---")
-    for server in servers:
+    for server in storage.get_servers():
         print_server_format(server)
 
 def list_by_environment():
     environment = get_user_input("Ange miljö: ")
-    for server in servers:
+    for server in storage.get_servers():
         if server["miljo"] == environment:
             print_server_format(server)
 
@@ -60,13 +55,7 @@ def add_server():
     print("--- Lägg till server ---")
     name = get_user_input("Ange namn: ")
     address = get_user_input("Ange adress: ")
-
-    valid_environments = ["prod", "test", "dev"]
-    environment = get_user_input("Ange miljö (dev/test/prod): ")
-    while environment.lower() not in valid_environments:
-        print("Fel: Giltiga värden är dev, test eller prod. Försök igen.")
-        environment = get_user_input("Ange miljö (dev/test/prod): ")
-
+    environment = get_environment()
     role = get_user_input("Ange roll: ")
 
     if storage.server_exists(name):
@@ -76,7 +65,7 @@ def add_server():
     storage.add_server(name, address, environment, role)
 
 def remove_server():
-    target_servers = select_servers(servers, "Ange vilka servrar du vill ta bort (separera med kommatecken): ")
+    target_servers = select_servers("Ange vilka servrar du vill ta bort (separera med kommatecken): ")
 
     for server in target_servers:
         print(f"{server["namn"]} : {server["adress"]}")
@@ -90,18 +79,21 @@ def remove_server():
                 storage.remove_server(target)
 
 def check_server():
-    target_servers = select_servers(servers, "Ange vilka servrar du vill kontrollera: ")
+    target_servers = select_servers("Ange vilka servrar du vill kontrollera: ")
     # Kontrollerar valda servrar
     for target in target_servers:
         checker.ping_server(target)
     storage.save_servers()
 
-def export_report():
-    file_name = storage.export_report()
+def export_report(environment_filter = None):
+    if get_confirmation("Filtrera export efter miljö? Ja/nej:"):
+        environment_filter = get_environment()
+
+    file_name = storage.export_report(environment_filter)
     if file_name is None:
         print("Kunde inte skriva till fil.")
     else:
-        print(f"Rapport exporterad till {file_name}")
+        print(f"Rapport exporterad till {file_name}.")
 
 def print_server_format(server):
     print(f"{"Namn:":<25} {server["namn"]}")
@@ -111,13 +103,14 @@ def print_server_format(server):
     print(f"{"Status:":<25} {server["status"]}")
     print(f"{"Senast kontrollerad:":<25} {server["senast_kontrollerad"]} \n")
 
-def select_servers(servers, prompt):
+def select_servers(prompt):
     print("Vill du utföra åtgärden på samtliga servrar eller välja ut en/flera specifika servrar?\n")
     print("1. Alla servrar")
     print("2. Välj specifik(a) server/servrar\n")
 
     choice = get_user_choice(1, 2, "Gör ett val: ")
 
+    servers = storage.get_servers()
     target_servers = []
 
     match (choice):
@@ -136,11 +129,20 @@ def select_servers(servers, prompt):
                 target_servers.append(servers[number - 1])
     return target_servers
 
+def get_environment():
+    valid_environments = ["prod", "test", "dev"]
+    while True:
+        environment = get_user_input("Ange miljö (dev/test/prod): ")
+        if environment.lower() not in valid_environments:
+            print("Fel: Giltiga värden är dev, test eller prod. Försök igen.")
+        else:
+            return environment
+
+
 # Input validering, tvingar fram korrekt inmatning i en loop
 def get_user_choice(min, max, prompt):
     while True:
         user_input = input(prompt).strip()
-        choice = 0
 
         try:
             choice = int(user_input)

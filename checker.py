@@ -3,7 +3,6 @@ import subprocess
 
 import storage
 
-
 def ping_server(server):
     server_name = server["namn"]
     print(f"Kontrollerar {server_name}...")
@@ -22,3 +21,5 @@ def ping_server(server):
         print(f"{server_name} kan inte nås.")
         status = "down"
     storage.update_status(server, status)
+
+    return status

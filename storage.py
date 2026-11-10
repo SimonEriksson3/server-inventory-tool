@@ -23,16 +23,13 @@ def load_servers():
 def save_servers():
     file_path = config.get_servers_filepath()
     try:
-        if file_path.exists():
-            with open(file_path, "w", encoding="utf-8") as file:
-                json.dump(
-                    servers,
-                    file,
-                    indent=2,
-                    ensure_ascii=False
-                )
-        else:
-            print("Fel: Kunde inte skriva lagra nya servervärden. Filen hittades inte.")
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(
+                servers,
+                file,
+                indent=2,
+                ensure_ascii=False
+            )
     except PermissionError as e:
         print(f"Fel: Kunde inte läsa filen {file_path}. {e}")
 
@@ -64,17 +61,30 @@ def add_server(name, address, environment, role):
         "senast_kontrollerad": ""
     }
     servers.append(server_data)
+    save_servers()
 
 def remove_server(server):
     servers.remove(server)
+    save_servers()
 
-def export_report():
+def export_report(environment_filter = None):
     # Skapa mappen för rapporter om den inte finns.
     # Namnet på mappen anges i config.json
     directory = config.get_reports_filepath()
     directory.mkdir(exist_ok=True)
     time = datetime.now()
     file_path = directory / f"{time.strftime('report_%Y-%m-%d_%H-%M')}.csv"
+
+    target_servers = []
+
+    # Använd filtret om det finns.
+    # Vi lägger till alla servrar
+    if environment_filter:
+        for server in servers:
+            if server["miljo"] == environment_filter:
+                target_servers.append(server)
+    else:
+        target_servers = servers.copy()
 
     try:
         with open(file_path, "w", newline="", encoding="utf-8") as file:
@@ -83,7 +93,7 @@ def export_report():
                 fieldnames=["namn", "adress", "miljo", "roll", "status", "senast_kontrollerad"]
             )
             writer.writeheader()
-            writer.writerows(servers)
+            writer.writerows(target_servers)
         return file_path
     except PermissionError:
         print(f"PermissionError: Kunde inte skriva till filen {file_path}. ")
