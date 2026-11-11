@@ -7,7 +7,6 @@ import config
 
 def load_servers():
     file_path = config.get_servers_filepath()
-    global servers # För att vi ska kunna nå den globala variabeln servers
     try:
         if file_path.exists():
             with open(file_path, "r", encoding="utf-8") as file:
@@ -16,9 +15,11 @@ def load_servers():
             print("Fel: Kunde inte ladda servrar. Filen hittades inte.")
             return [] # Returnera ny tom lista
     except PermissionError as e:
-        print(f"Fel: Kunde inte läsa filen {file_path}. {e}")
+        print(f"Fel: Kunde inte läsa filen {file_path}. Rättigheter saknas.")
     except json.JSONDecodeError:
         print(f"Fel: Kunde inte läsa filen {file_path}. JSON-filen kan vara trasig")
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under läsprocessen för {file_path}. {e}")
 
 def save_servers():
     file_path = config.get_servers_filepath()
@@ -31,7 +32,9 @@ def save_servers():
                 ensure_ascii=False
             )
     except PermissionError as e:
-        print(f"Fel: Kunde inte läsa filen {file_path}. {e}")
+        print(f"Fel: Kunde inte skriva till filen {file_path}. Rättigheter saknas.")
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under skrivprocessen för {file_path}. {e}")
 
 servers = load_servers()
 
@@ -96,7 +99,7 @@ def export_report(environment_filter = None):
             writer.writerows(target_servers)
         return file_path
     except PermissionError:
-        print(f"PermissionError: Kunde inte skriva till filen {file_path}. ")
+        print(f"Fel: Kunde inte skriva till filen {file_path}. Rättigheter saknas.")
     except OSError as e:
-        print(f"Fel: {e}")
+        print(f"Fel: Ett fel uppstod under skrivprocessen för {file_path}. {e}")
     return None

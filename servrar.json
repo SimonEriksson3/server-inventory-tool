@@ -5,30 +5,30 @@
     "miljo": "prod",
     "roll": "webbserver",
     "status": "unknown",
-    "senast_kontrollerad": ""
+    "senast_kontrollerad": "2026-11-11 12:59"
   },
   {
     "namn": "db01",
     "adress": "127.0.0.1",
     "miljo": "prod",
     "roll": "databas",
-    "status": "unknown",
-    "senast_kontrollerad": ""
+    "status": "up",
+    "senast_kontrollerad": "2026-11-11 11:41"
   },
   {
     "namn": "test01",
     "adress": "192.0.2.10",
     "miljo": "test",
     "roll": "testserver",
-    "status": "unknown",
-    "senast_kontrollerad": ""
+    "status": "down",
+    "senast_kontrollerad": "2026-11-11 11:34"
   },
   {
     "namn": "dev01",
     "adress": "localhost",
     "miljo": "dev",
     "roll": "utvecklingsserver",
-    "status": "unknown",
-    "senast_kontrollerad": ""
+    "status": "up",
+    "senast_kontrollerad": "2026-11-11 11:41"
   }
 ]

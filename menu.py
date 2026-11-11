@@ -41,7 +41,7 @@ def print_menu():
     print("7. Avsluta")
 
 def list_all_servers():
-    print("--- Alla registrerade servrar ---")
+    print("--- Alla registrerade servrar ---\n")
     for server in storage.get_servers():
         print_server_format(server)
 
@@ -63,17 +63,18 @@ def add_server():
         return
 
     storage.add_server(name, address, environment, role)
+    print(f"{name} lades till. \n")
 
 def remove_server():
     target_servers = select_servers("Ange vilka servrar du vill ta bort (separera med kommatecken): ")
 
     for server in target_servers:
-        print(f"{server["namn"]} : {server["adress"]}")
+        print(f"{server['namn']} : {server['adress']}")
     if get_confirmation("Är du säker på att du vill ta bort dessa servrar (ja/nej)?"):
         for target in target_servers:
             # Extra kontroll för radering av servrar i produktionsmiljön
             if target["miljo"] == "prod":
-                if get_confirmation(f"{target["namn"]} är i produktion! \nÄr du säker på att du vill ta bort den (ja/nej)?"):
+                if get_confirmation(f"{target['namn']} är i produktion! \nÄr du säker på att du vill ta bort den (ja/nej)?"):
                     storage.remove_server(target)
             else:
                 storage.remove_server(target)
@@ -86,22 +87,23 @@ def check_server():
     storage.save_servers()
 
 def export_report(environment_filter = None):
-    if get_confirmation("Filtrera export efter miljö? Ja/nej:"):
+    if get_confirmation("Filtrera export efter miljö? (Ja/nej):"):
         environment_filter = get_environment()
 
     file_name = storage.export_report(environment_filter)
     if file_name is None:
         print("Kunde inte skriva till fil.")
     else:
-        print(f"Rapport exporterad till {file_name}.")
+        print(f"\nRapport exporterad till {file_name}.\n")
 
 def print_server_format(server):
-    print(f"{"Namn:":<25} {server["namn"]}")
-    print(f"{"Adress:":<25} {server["adress"]}")
-    print(f"{"Miljö:":<25} {server["miljo"]}")
-    print(f"{"Roll:":<25} {server["roll"]}")
-    print(f"{"Status:":<25} {server["status"]}")
-    print(f"{"Senast kontrollerad:":<25} {server["senast_kontrollerad"]} \n")
+    print(f"{'Namn:':<25} {server['namn']}")
+    print(f"{'Adress:':<25} {server['adress']}")
+    print(f"{'Miljö:':<25} {server['miljo']}")
+    print(f"{'Roll:':<25} {server['roll']}")
+    print(f"{'Status:':<25} {server['status']}")
+    print(f"{'Senast kontrollerad:':<25} {server['senast_kontrollerad']}")
+    print("------------------------------------------\n")
 
 def select_servers(prompt):
     print("Vill du utföra åtgärden på samtliga servrar eller välja ut en/flera specifika servrar?\n")

@@ -13,17 +13,19 @@ parser.add_argument("--lista",
                     help="Lista alla servrar")
 parser.add_argument("--miljo",
                     choices=["dev", "test", "prod"],
-                    help="Filtrera baserat på miljö (dev, test, prod)")
+                    help="Filtrera baserat på miljö. Filtret appliceras på lista, kontrollera samt export. ")
 parser.add_argument("--server",
+                    metavar="namn",
                     help="Visa en specifik server")
 parser.add_argument("--kontrollera",
+                    metavar="namn",
                     help="Kontrollera en viss server")
 parser.add_argument("--kontrollera-alla",
                     action="store_true",
                     help="Kontrollera alla servrar")
 parser.add_argument("--export",
                     action="store_true",
-                    help="Exporterar en rapport i CSV-format")
+                    help="Exportera en rapport i CSV-format")
 
 servers = storage.get_servers()
 environment_filter = None
@@ -36,7 +38,7 @@ environment_filter = None
 def run():
     args = parser.parse_args()
 
-    global environment_filter
+    global environment_filter # För att inte skapa en ny lokal variabel
 
     # --server (lista specifik server)
     if args.server:
@@ -50,8 +52,10 @@ def run():
     # --kontrollera (kontrollerar specifik server)
     if args.kontrollera:
         server = find_by_name(args.kontrollera)
-        checker.ping_server(server)
+        status = checker.ping_server(server)
         storage.save_servers()
+        if status == "down":
+            sys.exit(1)
 
     # --kontrollera-alla (kontrollerar alla servrar)
     if args.kontrollera_alla:
@@ -68,16 +72,15 @@ def run():
     # Om allt gick bra, avsluta med exit code 0
     sys.exit(0)
 
-def list_by_environment(environment):
-    for server in servers:
-        if server["miljo"] == environment:
-            menu.print_server_format(server)
-
 def list_servers():
+    # Lista utan filter
     if not environment_filter:
         menu.list_all_servers()
+    # Lista med filter
     else:
-        list_by_environment(environment_filter)
+        for server in servers:
+            if server["miljo"] == environment_filter:
+                menu.print_server_format(server)
 
 def check_all_servers():
     server_down = False
@@ -97,7 +100,7 @@ def export_report():
         print("Fel: Kunde inte skriva till fil.")
         sys.exit(2)
     else:
-        print(f"Rapport exporterad till {file_name}.")
+        print(f"\nRapport exporterad till {file_name}.\n")
 
 def find_by_name(name):
     for server in servers:
