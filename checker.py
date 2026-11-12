@@ -14,9 +14,9 @@ def ping_server(server):
 
     try:
         result = subprocess.run(
-            ["ping", arg, "2", server["adress"]],
+            ["ping", arg, "1", server["adress"]],
             capture_output=True,
-            timeout=5,
+            timeout=10,
             text=True)
         if result.returncode == 0:
             print(f"{server_name} gick att nå.\n")
@@ -29,6 +29,7 @@ def ping_server(server):
         status = "unknown"
     except subprocess.TimeoutExpired:
         print(f"Fel: Kontrollen av {server_name} tog för lång tid och har avbrutits.")
+        status = "down"
 
     storage.update_status(server, status)
 

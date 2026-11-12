@@ -4,8 +4,8 @@
     "adress": "example.com",
     "miljo": "prod",
     "roll": "webbserver",
-    "status": "unknown",
-    "senast_kontrollerad": "2026-11-11 12:59"
+    "status": "up",
+    "senast_kontrollerad": "2026-11-12 09:14"
   },
   {
     "namn": "db01",
@@ -13,7 +13,7 @@
     "miljo": "prod",
     "roll": "databas",
     "status": "up",
-    "senast_kontrollerad": "2026-11-11 11:41"
+    "senast_kontrollerad": "2026-11-12 09:14"
   },
   {
     "namn": "test01",
@@ -21,7 +21,7 @@
     "miljo": "test",
     "roll": "testserver",
     "status": "down",
-    "senast_kontrollerad": "2026-11-11 11:34"
+    "senast_kontrollerad": "2026-11-12 09:14"
   },
   {
     "namn": "dev01",
@@ -29,6 +29,22 @@
     "miljo": "dev",
     "roll": "utvecklingsserver",
     "status": "up",
-    "senast_kontrollerad": "2026-11-11 11:41"
+    "senast_kontrollerad": "2026-11-12 09:14"
+  },
+  {
+    "namn": "asd",
+    "adress": "asd",
+    "miljo": "dev",
+    "roll": "das",
+    "status": "down",
+    "senast_kontrollerad": "2026-11-12 09:14"
+  },
+  {
+    "namn": "as",
+    "adress": "as",
+    "miljo": "prod",
+    "roll": "ut",
+    "status": "unknown",
+    "senast_kontrollerad": ""
   }
 ]

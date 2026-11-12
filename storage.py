@@ -6,37 +6,26 @@ import json
 import config
 
 def load_servers():
+    global servers
     file_path = config.get_servers_filepath()
-    try:
-        if file_path.exists():
-            with open(file_path, "r", encoding="utf-8") as file:
-                return json.load(file)
-        else:
-            print("Fel: Kunde inte ladda servrar. Filen hittades inte.")
-            return [] # Returnera ny tom lista
-    except PermissionError as e:
-        print(f"Fel: Kunde inte läsa filen {file_path}. Rättigheter saknas.")
-    except json.JSONDecodeError:
-        print(f"Fel: Kunde inte läsa filen {file_path}. JSON-filen kan vara trasig")
-    except OSError as e:
-        print(f"Fel: Ett fel uppstod under läsprocessen för {file_path}. {e}")
+    if not file_path.exists():
+        servers = []
+        return
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        servers = json.load(file)
 
 def save_servers():
     file_path = config.get_servers_filepath()
-    try:
-        with open(file_path, "w", encoding="utf-8") as file:
-            json.dump(
-                servers,
-                file,
-                indent=2,
-                ensure_ascii=False
-            )
-    except PermissionError as e:
-        print(f"Fel: Kunde inte skriva till filen {file_path}. Rättigheter saknas.")
-    except OSError as e:
-        print(f"Fel: Ett fel uppstod under skrivprocessen för {file_path}. {e}")
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(
+            servers,
+            file,
+            indent=2,
+            ensure_ascii=False
+        )
 
-servers = load_servers()
+servers = []
 
 def get_servers():
     return servers
@@ -74,7 +63,6 @@ def export_report(environment_filter = None):
     # Skapa mappen för rapporter om den inte finns.
     # Namnet på mappen anges i config.json
     directory = config.get_reports_filepath()
-    directory.mkdir(exist_ok=True)
     time = datetime.now()
     file_path = directory / f"{time.strftime('report_%Y-%m-%d_%H-%M')}.csv"
 
@@ -89,17 +77,12 @@ def export_report(environment_filter = None):
     else:
         target_servers = servers.copy()
 
-    try:
-        with open(file_path, "w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(
-                file,
-                fieldnames=["namn", "adress", "miljo", "roll", "status", "senast_kontrollerad"]
-            )
-            writer.writeheader()
-            writer.writerows(target_servers)
-        return file_path
-    except PermissionError:
-        print(f"Fel: Kunde inte skriva till filen {file_path}. Rättigheter saknas.")
-    except OSError as e:
-        print(f"Fel: Ett fel uppstod under skrivprocessen för {file_path}. {e}")
-    return None
+    directory.mkdir(exist_ok=True)
+    with open(file_path, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["namn", "adress", "miljo", "roll", "status", "senast_kontrollerad"]
+        )
+        writer.writeheader()
+        writer.writerows(target_servers)
+    return file_path

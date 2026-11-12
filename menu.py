@@ -1,9 +1,21 @@
 # Text-baserad meny.
+import json
+
 import checker
 import storage
 
 # Starts the menu loop
 def run():
+    # Ladda serverlistan
+    try:
+        storage.load_servers()
+    except PermissionError as e:
+        print(f"Fel: Kunde inte läsa filen {e.filename}. Rättigheter saknas.")
+    except json.JSONDecodeError:
+        print(f"Fel: Kunde inte läsa filen {e.filename}. JSON-filen kan vara trasig")
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under läsprocessen för {e.filename}. {e}")
+
     while True:
         print_menu()
         choice = get_user_choice(1, 7, "Gör ett val: ")
@@ -84,17 +96,21 @@ def check_server():
     # Kontrollerar valda servrar
     for target in target_servers:
         checker.ping_server(target)
-    storage.save_servers()
+    save_changes()
 
 def export_report(environment_filter = None):
     if get_confirmation("Filtrera export efter miljö? (Ja/nej):"):
         environment_filter = get_environment()
 
-    file_name = storage.export_report(environment_filter)
-    if file_name is None:
-        print("Kunde inte skriva till fil.")
-    else:
+    try:
+        file_name = storage.export_report(environment_filter)
         print(f"\nRapport exporterad till {file_name}.\n")
+    except PermissionError as e:
+        print(f"Fel: Kunde inte skriva till filen {e.filename}. Rättigheter saknas.")
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under skrivprocessen för {e.filename}. {e}")
+
+
 
 def print_server_format(server):
     print(f"{'Namn:':<25} {server['namn']}")
@@ -146,6 +162,10 @@ def get_user_choice(min, max, prompt):
     while True:
         user_input = input(prompt).strip()
 
+        if user_input == "":
+            print("Fel: Tom inmatning. Du måstet ange ett giltigt värde.")
+            continue
+
         try:
             choice = int(user_input)
             if choice >= min and choice <= max:
@@ -162,7 +182,7 @@ def get_user_input(prompt):
         user_input = input(prompt).strip()
 
         if user_input == "":
-            print("Fel: Ange ett giltigt värde")
+            print("Fel: Tom inmatning. Du måste ange ett giltigt värde.")
             continue
         parts = user_input.split()
         if len(parts) > 1:
@@ -209,3 +229,11 @@ def get_confirmation(prompt):
             return True
         elif user_input.lower() == "nej" or user_input.lower() == "n":
             return False
+
+def save_changes():
+    try:
+        storage.save_servers()
+    except PermissionError as e:
+        print(f"Fel: Kunde inte skriva till filen {e.filename}. Rättigheter saknas.")
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under skrivprocessen för {e.filename}. {e}")

@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 
 import checker
@@ -36,38 +37,51 @@ environment_filter = None
 # 2: kunde inte skriva eller läsa fil
 
 def run():
-    args = parser.parse_args()
+    try:
+        # Ladda serverlistan
+        storage.load_servers()
 
-    global environment_filter # För att inte skapa en ny lokal variabel
+        args = parser.parse_args()
 
-    # --server (lista specifik server)
-    if args.server:
-        server = find_by_name(args.server)
-        menu.print_server_format(server)
+        global environment_filter # För att inte skapa en ny lokal variabel
 
-    # --miljo (filtrera efter miljö när vi listar, kontrollerar eller exporterar)
-    if args.miljo:
-        environment_filter = args.miljo
+        # --server (lista specifik server)
+        if args.server:
+            server = find_by_name(args.server)
+            menu.print_server_format(server)
 
-    # --kontrollera (kontrollerar specifik server)
-    if args.kontrollera:
-        server = find_by_name(args.kontrollera)
-        status = checker.ping_server(server)
-        storage.save_servers()
-        if status == "down":
-            sys.exit(1)
+        # --miljo (filtrera efter miljö när vi listar, kontrollerar eller exporterar)
+        if args.miljo:
+            environment_filter = args.miljo
 
-    # --kontrollera-alla (kontrollerar alla servrar)
-    if args.kontrollera_alla:
-        check_all_servers()
+        # --kontrollera (kontrollerar specifik server)
+        if args.kontrollera:
+            server = find_by_name(args.kontrollera)
+            status = checker.ping_server(server)
+            storage.save_servers()
+            if status != "up":
+                sys.exit(1)
 
-    # --lista (listar alla servrar)
-    if args.lista:
-        list_servers()
+        # --kontrollera-alla (kontrollerar alla servrar)
+        if args.kontrollera_alla:
+            check_all_servers()
 
-    # --export (exporterar servrar)
-    if args.export:
-        export_report()
+        # --lista (listar alla servrar)
+        if args.lista:
+            list_servers()
+
+        # --export (exporterar servrar)
+        if args.export:
+            export_report()
+    except PermissionError as e:
+        print(f"Fel: Kunde inte läsa filen {e.filename}. Rättigheter saknas.")
+        sys.exit(2)
+    except json.JSONDecodeError as e:
+        print(f"Fel: Kunde inte läsa filen {e.filename}. JSON-filen kan vara trasig")
+        sys.exit(2)
+    except OSError as e:
+        print(f"Fel: Ett fel uppstod under läsprocessen för {e.filename}. {e}")
+        sys.exit(2)
 
     # Om allt gick bra, avsluta med exit code 0
     sys.exit(0)
@@ -87,7 +101,7 @@ def check_all_servers():
     for server in servers:
         if environment_filter and server["miljo"] != environment_filter:
             continue
-        if checker.ping_server(server) == "down":
+        if checker.ping_server(server) != "up":
             server_down = True
     storage.save_servers()
     #Om en server är nere, avsluta med exitcode 1
@@ -96,11 +110,7 @@ def check_all_servers():
 
 def export_report():
     file_name = storage.export_report(environment_filter)
-    if file_name is None:
-        print("Fel: Kunde inte skriva till fil.")
-        sys.exit(2)
-    else:
-        print(f"\nRapport exporterad till {file_name}.\n")
+    print(f"\nRapport exporterad till {file_name}.\n")
 
 def find_by_name(name):
     for server in servers:
