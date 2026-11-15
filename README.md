@@ -1,3 +1,4 @@
+
 # Server Inventory Tool
 
 ## Om verktyget
@@ -34,19 +35,18 @@ För att köra programmet behöver du:
 ## Användning
 
 Verktyget kan användas på två sätt: i ett textbaserat användargränssnitt eller i CLI-läge.
-<br>
 
 ### Starta med textbaserat användargränssnitt:
-Kör utan argument.
+Kör programmet utan argument för att starta med ett användargränssnitt i terminalen.
 ```bash
 python main.py
 ```
 ### Använda CLI:
-Kör med argument. T.ex:
+Kör programmet med argument. T.ex:
 ```bash
 python main.py --miljo prod --kontrollera-alla
 ```
-<br>
+
 
 ### Tillgängliga CLI-argument:
 Genom att skicka med argument så kan åtgärder utföras direkt i terminalen.
@@ -74,7 +74,28 @@ Programmet lagrar servrar i en JSON-fil. Vilken fil som används bestäms i föl
 2. **Konfigurationsfil:** Annars läses sökvägen från konfigurationsfilen `config.json`.
 3. **Standardvärde:** Om konfigurationsfilen inte finns eller inte kan läsas så startar programmet med `servrar.json` som standardvärde.
 
-## Fördjupningar
+I `config.json` anger du sökvägen till både serverlistan och mappen där CSV-rapporterna ska lagras:
+```json
+ {
+    "servers_sökväg" : "servrar.json",
+    "rapporter_sökväg" : "rapporter"
+ }
+```
+Exempel på hur du kan använda miljövariabeln för serverlistan i terminalen:
+
+**Linux/MacOS:**
+```bash
+export INVENTORY_DATAFIL=mina_servrar.json
+python main.py
+```
+**Windows (PowerShell):**
+```powershell
+$env:INVENTORY_DATAFIL="mina_servrar.json"
+python main.py
+```
+
+# Fördjupningar
 Fördjupningar som finns implementerade i programmet:
 1. **Konfigurationsfil**: Programmet hämtar sin konfiguration från `config.json` där man kan ange sökväg till `servrar.json` samt sökväg till var rapporter ska lagras.
-2. **Säkrare inmatning:** I textmenyn valideras all inmatning i en loop för att säkerställa att korrekt inmatning ges så att programmet kan fortsätta utan att krasha.
+2. **Säkrare inmatning:** I textmenyn valideras all inmatning i en loop för att säkerställa att korrekt inmatning ges så att programmet kan fortsätta utan att krascha. Om användaren inte anger något, anger ogiltiga tecken eller försöker lägga till en server som redan finns så skrivs ett felmeddelande ut och användaren får försöka
+igen tills att korrekt inmatning ges.
