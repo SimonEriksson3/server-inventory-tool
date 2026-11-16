@@ -5,13 +5,14 @@ import json
 
 import config
 
+servers = []
+
 def load_servers():
     global servers
     file_path = config.get_servers_filepath()
     if not file_path.exists():
         servers = []
         return
-
     with open(file_path, "r", encoding="utf-8") as file:
         servers = json.load(file)
 
@@ -24,8 +25,6 @@ def save_servers():
             indent=2,
             ensure_ascii=False
         )
-
-servers = []
 
 def get_servers():
     return servers

@@ -3,6 +3,7 @@ import json
 import sys
 
 import checker
+import config
 import menu
 import storage
 
@@ -28,14 +29,12 @@ parser.add_argument("--export",
                     action="store_true",
                     help="Exportera en rapport i CSV-format")
 
-servers = storage.get_servers()
 environment_filter = None
 
 # Exit codes:
 # 0: allt gick bra
 # 1: minst en server är nere
 # 2: kunde inte skriva eller läsa fil
-
 def run():
     try:
         # Ladda serverlistan
@@ -77,7 +76,7 @@ def run():
         print(f"Fel: Kunde inte läsa filen {e.filename}. Rättigheter saknas.")
         sys.exit(2)
     except json.JSONDecodeError as e:
-        print(f"Fel: Kunde inte läsa filen {e.filename}. JSON-filen kan vara trasig")
+        print(f"Fel: Kunde inte läsa filen {config.get_servers_filepath()}. JSON-filen kan vara trasig")
         sys.exit(2)
     except OSError as e:
         print(f"Fel: Ett fel uppstod under läsprocessen för {e.filename}. {e}")
@@ -87,6 +86,8 @@ def run():
     sys.exit(0)
 
 def list_servers():
+    servers = storage.get_servers()
+
     # Lista utan filter
     if not environment_filter:
         menu.list_all_servers()
@@ -97,6 +98,7 @@ def list_servers():
                 menu.print_server_format(server)
 
 def check_all_servers():
+    servers = storage.get_servers()
     server_down = False
     for server in servers:
         if environment_filter and server["miljo"] != environment_filter:
@@ -113,6 +115,7 @@ def export_report():
     print(f"\nRapport exporterad till {file_name}.\n")
 
 def find_by_name(name):
+    servers = storage.get_servers()
     for server in servers:
         if server["namn"] == name:
             return server

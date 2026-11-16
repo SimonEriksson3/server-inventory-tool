@@ -2,6 +2,7 @@
 import json
 
 import checker
+import config
 import storage
 
 # Starts the menu loop
@@ -11,8 +12,8 @@ def run():
         storage.load_servers()
     except PermissionError as e:
         print(f"Fel: Kunde inte läsa filen {e.filename}. Rättigheter saknas.")
-    except json.JSONDecodeError:
-        print(f"Fel: Kunde inte läsa filen {e.filename}. JSON-filen kan vara trasig")
+    except json.JSONDecodeError as e:
+        print(f"Fel: Kunde inte läsa filen {config.get_servers_filepath()}. JSON-filen kan vara trasig.")
     except OSError as e:
         print(f"Fel: Ett fel uppstod under läsprocessen för {e.filename}. {e}")
 
@@ -110,8 +111,6 @@ def export_report(environment_filter = None):
     except OSError as e:
         print(f"Fel: Ett fel uppstod under skrivprocessen för {e.filename}. {e}")
 
-
-
 def print_server_format(server):
     print(f"{'Namn:':<25} {server['namn']}")
     print(f"{'Adress:':<25} {server['adress']}")
@@ -154,7 +153,7 @@ def get_environment():
         if environment.lower() not in valid_environments:
             print("Fel: Giltiga värden är dev, test eller prod. Försök igen.")
         else:
-            return environment
+            return environment.lower()
 
 
 # Input validering, tvingar fram korrekt inmatning i en loop
@@ -163,7 +162,7 @@ def get_user_choice(min, max, prompt):
         user_input = input(prompt).strip()
 
         if user_input == "":
-            print("Fel: Tom inmatning. Du måstet ange ett giltigt värde.")
+            print("Fel: Tom inmatning. Du måste ange ett giltigt värde.")
             continue
 
         try:
@@ -214,9 +213,9 @@ def get_multiple_choices(min, max, prompt):
                         numbers.append(server_number)
             except ValueError:
                 print(f"Fel: {part} ej tillåtet. Endast siffror tillåtna.")
-                break
-        else:
-            if not numbers:
+                continue
+        else: # När loopen blir färdig utan fel
+            if not numbers: # Om listan är tom, hoppa till nästa iteration
                 continue
             return numbers
 
