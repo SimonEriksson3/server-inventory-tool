@@ -25,10 +25,10 @@ def ping_server(server):
             print(f"{server_name} kan inte nås.\n")
             status = "down"
     except FileNotFoundError:
-        print("Fel: Ping kunde inte hittas i systemet. Ping måste vara tillgängligt för att kunna utföra kontroller av en server.")
+        print("Fel: Ping kunde inte hittas i systemet. Ping måste vara tillgängligt för att kunna utföra kontroller av en server.\n")
         status = "unknown"
     except subprocess.TimeoutExpired:
-        print(f"Fel: Kontrollen av {server_name} tog för lång tid och har avbrutits.")
+        print(f"Fel: Kontrollen av {server_name} tog för lång tid och har avbrutits.\n")
         status = "down"
 
     storage.update_status(server, status)

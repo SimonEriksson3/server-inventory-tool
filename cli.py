@@ -39,8 +39,13 @@ def run():
     try:
         # Ladda serverlistan
         storage.load_servers()
-
         args = parser.parse_args()
+
+        if not storage.get_servers():
+            print("Det finns inga servrar just nu.")
+            if args.kontrollera or args.server:
+                sys.exit(1)
+            sys.exit(0)
 
         global environment_filter # För att inte skapa en ny lokal variabel
 
